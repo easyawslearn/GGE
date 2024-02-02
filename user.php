@@ -1,7 +1,7 @@
 <?php
 require_once("connection.php");
 
-$query = "select u_id,username,user_type from user";
+$query = "select u_id,username,user_type from user where is_deleted = false";
 $result = mysqli_query($con, $query);
 ?>
 
@@ -40,7 +40,7 @@ $result = mysqli_query($con, $query);
     <!-- Main Sidebar Container -->
     <aside class="main-sidebar sidebar-dark-primary elevation-4">
       <!-- Brand Logo -->
-      <a href="index3.html" class="brand-link">
+      <a href="home.html" class="brand-link">
         <img src="dist/img/AdminLTELogo.png" alt="AdminLTE Logo" class="brand-image img-circle elevation-3" style="opacity: 0.8" />
         <span class="brand-text font-weight-light">GGE</span>
       </a>

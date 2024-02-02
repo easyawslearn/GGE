@@ -1,9 +1,7 @@
 <?php
 require_once("connection.php");
 
-// $query = "select p_id,p_name,valid_vote_count,rejected_vote_count,no_show_count,ps_name from party as P inner join polling_station as PS on P.ps_id=PS.ps_id";
-
-$query = "SELECT p.p_id,p.p_name, ps.ps_name, c.c_name, r.r_name FROM party AS p JOIN polling_station AS ps ON p.ps_id = ps.ps_id JOIN constituencies AS c ON ps.c_id = c.c_id JOIN region AS r ON c.r_id = r.r_id;";
+$query = "SELECT p.p_id,p.p_name, ps.ps_name, c.c_name, r.r_name FROM party AS p JOIN polling_station AS ps ON p.ps_id = ps.ps_id JOIN constituencies AS c ON ps.c_id = c.c_id JOIN region AS r ON c.r_id = r.r_id WHERE p.is_deleted = false;";
 
 $result = mysqli_query($con, $query);
 ?>
@@ -38,9 +36,9 @@ $result = mysqli_query($con, $query);
     <!-- /.navbar -->
 
     <!-- Main Sidebar Container -->
-    <aside class="main-sidebar sidebar-dark-primary elevation-4">
+    <aside class="main-sidebar sidebar-dark-primary elevation-4" style="position: fixed;">
       <!-- Brand Logo -->
-      <a href="index3.html" class="brand-link">
+      <a href="home.html" class="brand-link">
         <img src="dist/img/AdminLTELogo.png" alt="AdminLTE Logo" class="brand-image img-circle elevation-3" style="opacity: 0.8" />
         <span class="brand-text font-weight-light">GGE</span>
       </a>
@@ -141,10 +139,10 @@ $result = mysqli_query($con, $query);
                   <div class="card-body">
 
                     <div class="form-group">
-                      <label for="regions">Region</label>
-                      <select name="region_select" id="region" class="custom-select" onchange="updateConstituencies()">
+                      <label for="region">Region</label>
+                      <select name="region_select" id="region" class="custom-select" onchange="updateConstituencies('add')">
                         <?php
-                        $region = mysqli_query($con, "SELECT r_id, r_name FROM region ORDER BY r_name ASC");
+                        $region = mysqli_query($con, "SELECT r_id, r_name FROM region WHERE is_deleted=false ORDER BY r_name ASC");
                         while ($row = mysqli_fetch_assoc($region)) {
                         ?>
                           <option value="<?php echo $row['r_id']; ?>">
@@ -157,14 +155,14 @@ $result = mysqli_query($con, $query);
                     </div>
 
                     <div class="form-group">
-                      <label for="constituencies">Constituency</label>
-                      <select name="constituency_select" id="constituency" class="custom-select" onchange="updatePollingStations()">
+                      <label for="constituency">Constituency</label>
+                      <select name="constituency_select" id="constituency" class="custom-select" onchange="updatePollingStations('add')">
                         <!-- Options will be populated by JavaScript -->
                       </select>
                     </div>
 
                     <div class="form-group">
-                      <label for="polling_stations">Select a polling station</label>
+                      <label for="polling_station">Polling station</label>
                       <select name="ps_select" id="polling_station" class="custom-select">
                         <!-- Options will be populated by JavaScript -->
                       </select>
@@ -176,7 +174,7 @@ $result = mysqli_query($con, $query);
                     </div>
 
                   </div>
-                  <button id="submit" type="submit" name="submit" class="btn btn-primary">Submit</button>
+                  <button id="submit-add" type="submit" name="submit" class="btn btn-primary">Submit</button>
                 </form>
                 <?php
                 if (isset($_POST['submit'])) {
@@ -213,54 +211,51 @@ $result = mysqli_query($con, $query);
                 <form action="" method="POST">
                   <div class="card-body">
                     <div class="form-group">
-                      <label for="Eps">Polling station</label>
-                      <select name="Eps_select" id="Eps" class="custom-select">
+                      <label for="region-edit">Region</label>
+                      <select name="Eregion_select" id="region-edit" class="custom-select" onchange="updateConstituencies('edit')">
                         <?php
-                        $ps = mysqli_query($con, "select ps_id,ps_name from polling_station");
-                        while ($row = mysqli_fetch_assoc($ps)) {
+                        $region = mysqli_query($con, "SELECT r_id, r_name FROM region WHERE is_deleted=false ORDER BY r_name ASC");
+                        while ($row = mysqli_fetch_assoc($region)) {
                         ?>
-                          <option value="<?php echo $row['ps_id']; ?>">
-                            <?php
-                            echo $row['ps_name'];
-                            ?>
+                          <option value="<?php echo $row['r_id']; ?>">
+                            <?php echo $row['r_name']; ?>
                           </option>
-
                         <?php
                         }
                         ?>
                       </select>
-
                     </div>
+
+                    <div class="form-group">
+                      <label for="constituency-edit">Constituency</label>
+                      <select name="Econstituency_select" id="constituency-edit" class="custom-select" onchange="updatePollingStations('edit')">
+                        <!-- Options will be populated by JavaScript -->
+                      </select>
+                    </div>
+
+                    <div class="form-group">
+                      <label for="polling_station-edit">Polling station</label>
+                      <select name="Eps_select" id="polling_station-edit" class="custom-select">
+                        <!-- Options will be populated by JavaScript -->
+                      </select>
+                    </div>
+
                     <div class="form-group">
                       <input type="hidden" name="Ep_id" id="Ep_id">
                       <label for="Eparty">Party</label>
                       <input type="text" name="Eparty" class="form-control" id="Eparty" placeholder="Enter name of party" required>
                     </div>
-                    <div class="form-group">
-                      <label for="Evvc">Vaild vote count</label>
-                      <input type="text" name="Evvc" class="form-control" id="Evvc" placeholder="Enter number of valid votes" required>
-                    </div>
-                    <div class="form-group">
-                      <label for="Ervc">Rejected vote count</label>
-                      <input type="text" name="Ervc" class="form-control" id="Ervc" placeholder="Enter number of rejected votes" required>
-                    </div>
-                    <div class="form-group">
-                      <label for="Ensc">No show count</label>
-                      <input type="text" name="Ensc" class="form-control" id="Ensc" placeholder="Enter number of no show votes" required>
-                    </div>
+
                   </div>
-                  <button type="submit" name="edit_submit" class="btn btn-primary">Update</button>
+                  <button type="submit" name="edit_submit" id="submit-edit" class="btn btn-primary">Update</button>
                 </form>
                 <?php
                 if (isset($_POST['edit_submit'])) {
                   $p_id = $_POST['Ep_id'];
                   $p_name = $_POST['Eparty'];
                   $ps_id = $_POST['Eps_select'];
-                  $vvc = $_POST['Evvc'];
-                  $rvc = $_POST['Ervc'];
-                  $nsc = $_POST['Ensc'];
 
-                  $upd = "UPDATE party SET p_name='$p_name',valid_vote_count='$vvc',rejected_vote_count='$rvc',no_show_count='$nsc',ps_id='$ps_id' WHERE p_id = $p_id";
+                  $upd = "UPDATE party SET p_name = '$p_name',ps_id='$ps_id' WHERE p_id = $p_id";
 
                   $run = mysqli_query($con, $upd);
 
@@ -401,7 +396,64 @@ $result = mysqli_query($con, $query);
     });
   </script>
 
-  <!-- Edir function -->
+  <!-- Constituencies and polling station fetcher -->
+
+  <script>
+    function updateConstituencies(call = 'add', callback) {
+      var regionId = document.getElementById(call == 'add' ? 'region' : 'region-edit').value;
+
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', 'select_menu_data.php?region_id=' + regionId, true);
+      xhr.onload = function() {
+        if (this.status == 200) {
+          var selectId = (call == 'add') ? 'constituency' : 'constituency-edit';
+          if (this.responseText.trim() === '') {
+            document.getElementById(selectId).innerHTML = '<option>No constituencies found</option>';
+            document.getElementById('submit-' + call).disabled = true;
+          } else {
+            document.getElementById('submit-' + call).disabled = false;
+            document.getElementById(selectId).innerHTML = this.responseText;
+            if (callback) {
+              callback();
+            }
+          }
+          updatePollingStations(call);
+        }
+      };
+      xhr.send();
+    }
+
+    function updatePollingStations(call = 'add', callback) {
+      var constituencyId = document.getElementById(call == 'add' ? 'constituency' : 'constituency-edit').value;
+
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', 'select_menu_data.php?constituency_id=' + constituencyId, true);
+      xhr.onload = function() {
+        if (this.status == 200) {
+          var selectId = (call == 'add') ? 'polling_station' : 'polling_station-edit';
+          if (this.responseText.trim() === '') {
+            document.getElementById(selectId).innerHTML = '<option>No polling stations found</option>';
+            document.getElementById('submit-' + call).disabled = true;
+          } else {
+            document.getElementById('submit-' + call).disabled = false;
+            document.getElementById(selectId).innerHTML = this.responseText;
+
+            if (callback) {
+              setTimeout(callback, 1000);
+            }
+          }
+        }
+      };
+      xhr.send();
+    }
+
+    window.onload = function() {
+      updateConstituencies('add');
+      updatePollingStations('add');
+    };
+  </script>
+
+  <!-- Edit function -->
   <script>
     $(".edit-button").click(function() {
       var id = $(this).data("id");
@@ -417,10 +469,36 @@ $result = mysqli_query($con, $query);
 
           $("#Ep_id").val(data.p_id);
           $('#Eparty').val(data.p_name);
-          $('#Evvc').val(data.valid_vote_count);
-          $('#Ervc').val(data.rejected_vote_count);
-          $('#Ensc').val(data.no_show_count);
-          $("#Eparty").val(data.p_name);
+
+          $("#region-edit option").each(function() {
+            if ($(this).val() == data.r_id) {
+              $(this).prop('selected', true);
+            } else {
+              $(this).prop('selected', false);
+            }
+          });
+
+          updateConstituencies('edit', function() {
+
+            $("#constituency-edit option").each(function() {
+              if ($(this).val() == data.c_id) {
+                $(this).prop('selected', true);
+              } else {
+                $(this).prop('selected', false);
+              }
+            });
+          });
+
+          updatePollingStations('edit', function() {
+
+            $("#polling_station-edit option").each(function() {
+              if ($(this).val() == data.ps_id) {
+                $(this).prop('selected', true);
+              } else {
+                $(this).prop('selected', false);
+              }
+            });
+          });
 
           $('#modal-edit').modal('show');
         }
@@ -451,59 +529,6 @@ $result = mysqli_query($con, $query);
     }
   </script>
 
-  <!-- Constituency and polling station fetcher -->
-  <script>
-    function updateConstituencies() {
-      var regionId = document.getElementById('region').value;
-
-      var xhr = new XMLHttpRequest();
-      xhr.open('GET', 'select_menu_data.php?region_id=' + regionId, true);
-      xhr.onload = function() {
-        if (this.status == 200) {
-
-          if (this.responseText.trim() === '') {
-            document.getElementById('constituency').innerHTML = '<option>No constituencies found</option>';
-
-            document.getElementById('polling_station').innerHTML = '<option>No polling stations found</option>';
-
-            document.getElementById('submit').disabled = true;
-          } else {
-            document.getElementById('submit').disabled = false;
-            document.getElementById('constituency').innerHTML = this.responseText;
-            updatePollingStations();
-          }
-        }
-      };
-      xhr.send();
-    }
-
-    function updatePollingStations() {
-      var constituencyId = document.getElementById('constituency').value;
-
-      var xhr = new XMLHttpRequest();
-      xhr.open('GET', 'select_menu_data.php?constituency_id=' + constituencyId, true);
-      xhr.onload = function() {
-        if (this.status == 200) {
-
-          if (this.responseText.trim() === '') {
-            document.getElementById('polling_station').innerHTML = '<option>No polling station found</option>';
-
-            document.getElementById('submit').disabled = true;
-          } else {
-            document.getElementById('submit').disabled = false;
-            document.getElementById('polling_station').innerHTML = this.responseText;
-          }
-        }
-      };
-      xhr.send();
-    }
-
-    window.onload = function() {
-      updateConstituencies();
-      updatePollingStations();
-    };
-
-  </script>
 </body>
 
 </html>

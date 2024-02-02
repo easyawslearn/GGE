@@ -1,7 +1,7 @@
 <?php
 require_once("connection.php");
 
-$query = "select c_id,c_name,r_name from constituencies as C inner join region as R on c.r_id=r.r_id";
+$query = "select c_id,c_name,r_name from constituencies as C inner join region as R on c.r_id=r.r_id where C.is_deleted = false";
 $result = mysqli_query($con, $query);
 ?>
 
@@ -35,9 +35,9 @@ $result = mysqli_query($con, $query);
     <!-- /.navbar -->
 
     <!-- Main Sidebar Container -->
-    <aside class="main-sidebar sidebar-dark-primary elevation-4">
+    <aside class="main-sidebar sidebar-dark-primary elevation-4" style="position: fixed;">
       <!-- Brand Logo -->
-      <a href="index3.html" class="brand-link">
+      <a href="home.html" class="brand-link">
         <img src="dist/img/AdminLTELogo.png" alt="AdminLTE Logo" class="brand-image img-circle elevation-3" style="opacity: 0.8" />
         <span class="brand-text font-weight-light">GGE</span>
       </a>
@@ -141,7 +141,7 @@ $result = mysqli_query($con, $query);
 
                       <select name="region_select" id="region" class="custom-select">
                         <?php
-                        $region = mysqli_query($con, "select r_id,r_name from region ORDER BY r_name ASC");
+                        $region = mysqli_query($con, "select r_id,r_name from region where is_deleted=false ORDER BY r_name ASC");
                         while ($row = mysqli_fetch_assoc($region)) {
                         ?>
                           <option value="<?php echo $row['r_id']; ?>">
@@ -201,7 +201,7 @@ $result = mysqli_query($con, $query);
                       <label for="Eregions">Region</label>
                       <select name="Eregion_select" id="Eregion" class="custom-select">
                         <?php
-                        $region = mysqli_query($con, "select r_id,r_name from region ORDER BY r_name ASC");
+                        $region = mysqli_query($con, "select r_id,r_name from region where is_deleted=false ORDER BY r_name ASC");
                         while ($row = mysqli_fetch_assoc($region)) {
                         ?>
                           <option value="<?php echo $row['r_id']; ?>">
@@ -361,7 +361,8 @@ $result = mysqli_query($con, $query);
           }
         });
       }
-      window.location.reload(true);
+      // window.location.reload(true);
+      setTimeout(window.location.reload(true), 1000);
     });
   </script>
 

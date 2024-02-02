@@ -6,19 +6,19 @@ if (isset($_POST['id'])) {
     $table = $_POST['table'];
 
     if ($table == 'user') {
-        $stmt = $con->prepare("SELECT * FROM user WHERE u_id = ?");
+        $stmt = $con->prepare("SELECT * FROM user WHERE u_id = ? AND is_deleted = false");
     } 
     elseif ($table == 'region') {
-        $stmt = $con->prepare("SELECT * FROM region WHERE r_id = ?");
+        $stmt = $con->prepare("SELECT * FROM region WHERE r_id = ? AND is_deleted = false");
     } 
     elseif ($table == 'cons') {
-        $stmt = $con->prepare("SELECT c_id, c_name, r_id FROM constituencies WHERE c_id = ?");
+        $stmt = $con->prepare("SELECT c_id, c_name, r_id FROM constituencies WHERE c_id = ? AND is_deleted = false");
     } 
     elseif ($table == 'ps') {
-        $stmt = $con->prepare("SELECT PS.ps_id, PS.ps_name,PS.c_id,C.r_id FROM polling_station AS PS INNER JOIN constituencies AS C ON PS.c_id=C.c_id  WHERE ps_id = ?");
+        $stmt = $con->prepare("SELECT PS.ps_id, PS.ps_name,PS.c_id,C.r_id FROM polling_station AS PS INNER JOIN constituencies AS C ON PS.c_id=C.c_id  WHERE ps_id = ? AND PS.is_deleted = false");
     } 
     elseif ($table == 'party') {
-        $stmt = $con->prepare("SELECT p_id, p_name, valid_vote_count, rejected_vote_count, no_show_count, ps_name FROM party AS P INNER JOIN polling_station AS PS ON P.ps_id = PS.ps_id WHERE p_id = ?");
+        $stmt = $con->prepare("SELECT P.p_id, P.p_name, P.ps_id,PS.c_id,C.r_id FROM party AS P INNER JOIN polling_station AS PS ON P.ps_id = PS.ps_id INNER JOIN constituencies AS C ON PS.c_id=C.C_id WHERE p_id = ? AND P.is_deleted = false");
     }
 
     $stmt->bind_param("i", $id);

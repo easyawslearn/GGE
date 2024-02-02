@@ -10,7 +10,7 @@ if ($con->connect_error) {
 if (isset($_GET['region_id'])) {
     $regionId = intval($_GET['region_id']);
 
-    $stmt = $con->prepare("SELECT c_id, c_name FROM constituencies WHERE r_id = ? ORDER BY c_name ASC");
+    $stmt = $con->prepare("SELECT c_id, c_name FROM constituencies WHERE r_id = ? AND is_deleted = false ORDER BY c_name ASC");
     $stmt->bind_param("i", $regionId);
 
     $stmt->execute();
@@ -23,7 +23,7 @@ if (isset($_GET['region_id'])) {
 
     $constituencyId = intval($_GET['constituency_id']);  
 
-    $stmt = $con->prepare("SELECT ps_id, ps_name FROM polling_station WHERE c_id = ? ORDER BY ps_name ASC");
+    $stmt = $con->prepare("SELECT ps_id, ps_name FROM polling_station WHERE c_id = ? AND is_deleted = false ORDER BY ps_name ASC");
     $stmt->bind_param("i", $constituencyId);
 
     $stmt->execute();

@@ -1,7 +1,7 @@
 <?php
 require_once("connection.php");
 
-$query = "SELECT ps.ps_id,ps.ps_name, c.c_name, r.r_name FROM polling_station AS ps JOIN constituencies AS c ON ps.c_id = c.c_id JOIN region AS r ON c.r_id = r.r_id;";
+$query = "select PS.ps_id,PS.ps_name,C.c_name,R.r_name from polling_station as PS inner join constituencies as C on PS.c_id=C.c_id inner join region as R on C.r_id=R.r_id where PS.is_deleted=false";
 
 $result = mysqli_query($con, $query);
 ?>
@@ -36,9 +36,9 @@ $result = mysqli_query($con, $query);
     <!-- /.navbar -->
 
     <!-- Main Sidebar Container -->
-    <aside class="main-sidebar sidebar-dark-primary elevation-4">
+    <aside class="main-sidebar sidebar-dark-primary elevation-4" style="position: fixed;">
       <!-- Brand Logo -->
-      <a href="index3.html" class="brand-link">
+      <a href="home.html" class="brand-link">
         <img src="dist/img/AdminLTELogo.png" alt="AdminLTE Logo" class="brand-image img-circle elevation-3" style="opacity: 0.8" />
         <span class="brand-text font-weight-light">GGE</span>
       </a>
@@ -142,7 +142,7 @@ $result = mysqli_query($con, $query);
                       <label for="region">Region</label>
                       <select name="region_select" id="region" class="custom-select" onchange="updateConstituencies('add')">
                         <?php
-                        $stmt = $con->prepare("SELECT r_id, r_name FROM region ORDER BY r_name ASC");
+                        $stmt = $con->prepare("SELECT r_id, r_name FROM region WHERE is_deleted=false ORDER BY r_name ASC");
                         $stmt->execute();
                         $region = $stmt->get_result();
                         while ($row = $region->fetch_assoc()) {
@@ -168,7 +168,7 @@ $result = mysqli_query($con, $query);
                       <input type="text" name="PS" class="form-control" id="PS" placeholder="Enter name of polling station" required>
                     </div>
                   </div>
-                  <button id="submit" type="submit" name="submit" class="btn btn-primary">Submit</button>
+                  <button id="submit-add" type="submit" name="submit" class="btn btn-primary">Submit</button>
                 </form>
                 <?php
                 if (isset($_POST['submit'])) {
@@ -206,9 +206,9 @@ $result = mysqli_query($con, $query);
                   <div class="card-body">
                     <div class="form-group">
                       <label for="Eregion">Region</label>
-                      <select name="Eregion_select" id="Eregion" class="custom-select" onchange="updateConstituencies('edit')">
+                      <select name="Eregion_select" id="region-edit" class="custom-select" onchange="updateConstituencies('edit')">
                         <?php
-                        $stmt = $con->prepare("SELECT r_id, r_name FROM region ORDER BY r_name ASC");
+                        $stmt = $con->prepare("SELECT r_id, r_name FROM region WHERE is_deleted=false ORDER BY r_name ASC");
                         $stmt->execute();
                         $region = $stmt->get_result();
                         while ($row = $region->fetch_assoc()) {
@@ -223,7 +223,7 @@ $result = mysqli_query($con, $query);
                     </div>
                     <div class="form-group">
                       <label for="Econstituency">Constituency</label>
-                      <select name="Econstituency_select" id="Econstituency" class="custom-select">
+                      <select name="Econstituency_select" id="constituency-edit" class="custom-select">
                         <!-- Options will be populated by JavaScript -->
                       </select>
                     </div>
@@ -233,7 +233,7 @@ $result = mysqli_query($con, $query);
                       <input type="text" name="EPS" class="form-control" id="EPS" placeholder="Enter name of polling station" required>
                     </div>
                   </div>
-                  <button type="submit" name="edit_submit" class="btn btn-primary">Update</button>
+                  <button type="submit" name="edit_submit" id="submit-edit" class="btn btn-primary">Update</button>
                 </form>
                 <?php
                 if (isset($_POST['edit_submit'])) {
@@ -374,8 +374,39 @@ $result = mysqli_query($con, $query);
           }
         });
       }
-      window.location.reload(true);
+      // window.location.reload(true);
+      setTimeout(window.location.reload(true), 1000);
+
     });
+  </script>
+
+  <!-- Constituency fetcher -->
+  <script>
+    function updateConstituencies(call = 'add') {
+      let regionId;
+      if (call == "add") {
+        regionId = document.getElementById('region').value;
+      } else if (call == "edit") {
+        regionId = document.getElementById('region-edit').value;
+      }
+
+      let xhr = new XMLHttpRequest();
+      xhr.open('GET', 'select_menu_data.php?region_id=' + regionId, true);
+      xhr.onload = function() {
+        if (this.status == 200) {
+          let selectId = (call == "add") ? 'constituency' : 'constituency-edit';
+          if (this.responseText.trim() === '') {
+            document.getElementById(selectId).innerHTML = '<option>No constituencies found</option>';
+            document.getElementById('submit-' + call).disabled = true;
+          } else {
+            document.getElementById('submit-' + call).disabled = false;
+            document.getElementById(selectId).innerHTML = this.responseText;
+          }
+        }
+      }
+      xhr.send();
+    }
+    window.onload = updateConstituencies('add');
   </script>
 
   <!-- Edit function -->
@@ -395,9 +426,8 @@ $result = mysqli_query($con, $query);
           $("#Eps_id").val(data.ps_id);
           $("#EPS").val(data.ps_name);
 
-          updateConstituencies('edit');
 
-          $("#region option").each(function() {
+          $("#region-edit option").each(function() {
             if ($(this).val() == data.r_id) {
               $(this).prop('selected', true);
             } else {
@@ -405,7 +435,9 @@ $result = mysqli_query($con, $query);
             }
           });
 
-          $("#Econstituency option").each(function() {
+          updateConstituencies('edit');
+
+          $("#Econstituency-edit option").each(function() {
             if ($(this).val() == data.c_id) {
               $(this).prop('selected', true);
             } else {
@@ -444,50 +476,7 @@ $result = mysqli_query($con, $query);
     }
   </script>
 
-  <!-- Constituency fetcher -->
-  <script>
-    // JavaScript function to update constituencies
-    function updateConstituencies(call) {
-      if (call = "add") {
-        var regionId = document.getElementById('region').value;
 
-        var xhr = new XMLHttpRequest();
-        xhr.open('GET', 'select_menu_data.php?region_id=' + regionId, true);
-        xhr.onload = function() {
-          if (this.status == 200) {
-
-            if (this.responseText.trim() === '') {
-              document.getElementById('constituency').innerHTML = '<option>No constituencies found</option>';
-
-              document.getElementById('submit').disabled = true;
-            } else {
-              document.getElementById('submit').disabled = false;
-              document.getElementById('constituency').innerHTML = this.responseText;
-            }
-          }
-        }
-      } else {
-        var regionId = document.getElementById('Eregion').value;
-
-        var xhr = new XMLHttpRequest();
-        xhr.open('GET', 'select_menu_data.php?region_id=' + regionId, true);
-        xhr.onload = function() {
-
-        if (this.responseText.trim() === '') {
-          document.getElementById('Econstituency').innerHTML = '<option>No constituencies found</option>';
-
-          document.getElementById('edit_submit').disabled = true;
-        } else {
-          document.getElementById('edit_submit').disabled = false;
-          document.getElementById('Econstituency').innerHTML = this.responseText;
-        }
-      }
-    };
-    xhr.send();
-    }
-
-    window.onload = updateConstituencies;
-  </script>
 </body>
 
 </html>

@@ -1,7 +1,7 @@
 <?php
 require_once("connection.php");
 
-$query = "select * from region";
+$query = "select * from region where is_deleted = false";
 $result = mysqli_query($con, $query);
 ?>
 
@@ -35,9 +35,9 @@ $result = mysqli_query($con, $query);
     <!-- /.navbar -->
 
     <!-- Main Sidebar Container -->
-    <aside class="main-sidebar sidebar-dark-primary elevation-4">
+    <aside class="main-sidebar sidebar-dark-primary elevation-4" style="position: fixed;">
       <!-- Brand Logo -->
-      <a href="index3.html" class="brand-link">
+      <a href="home.html" class="brand-link">
         <img src="dist/img/AdminLTELogo.png" alt="AdminLTE Logo" class="brand-image img-circle elevation-3" style="opacity: 0.8" />
         <span class="brand-text font-weight-light">GGE</span>
       </a>
@@ -85,9 +85,9 @@ $result = mysqli_query($con, $query);
             </li>
             <li class="nav-item">
               <a href="party.php" class="nav-link">
-                  <i class="nav-icon fas fa-users"></i>
-                  <p>Party</p>
-                </a>
+                <i class="nav-icon fas fa-users"></i>
+                <p>Party</p>
+              </a>
             </li>
           </ul>
         </nav>
@@ -146,11 +146,14 @@ $result = mysqli_query($con, $query);
                   <button type="submit" name="submit" class="btn btn-primary">Submit</button>
                 </form>
                 <?php
-                if (isset($_POST['submit']) and $_POST['r_name'] != "") {
+                if (isset($_POST['submit'])) {
                   $r_name = $_POST['r_name'];
 
-                  $ins = mysqli_query($con, "INSERT INTO region VALUES('','$r_name')");
-                  $result = mysqli_query($con, $query);
+                  $ins = "INSERT INTO region (r_name) VALUES ('$r_name')";
+
+                  $run = mysqli_query($con, $ins);
+
+                  echo "<meta http-equiv='refresh' content='0'>";
                 }
                 ?>
               </div>
@@ -206,7 +209,7 @@ $result = mysqli_query($con, $query);
                 <div class="input-group input-group-sm" style="width: 150px;">
                   <input type="text" id="search" name="table_search" onkeyup="search()" class="form-control float-right" placeholder="Search">
                   <div class="input-group-append btn">
-                      <i class="fas fa-search"></i>
+                    <i class="fas fa-search"></i>
                   </div>
                 </div>
               </div>
@@ -234,11 +237,11 @@ $result = mysqli_query($con, $query);
                       </td>
                       <td style="text-align: end;">
                         <?php
-                        $id=$row['r_id'];
+                        $id = $row['r_id'];
                         echo "<button type='button' class='btn btn-success edit-button' data-id=$id>
                           <i class='fas fa-pencil-alt'></i>
                           </button> &nbsp;&nbsp;";
-              
+
                         echo "<button type='button' class='btn btn-danger delete-button' data-id=$id><i class='fas fa-trash'></i></button>";
 
                         $number++;
@@ -269,16 +272,7 @@ $result = mysqli_query($con, $query);
                       <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                       <button id="submit" type="submit" name="delete" class="btn btn-danger">Delete</button>
                       </form>
-                      <?php
-                      if (isset($_POST['delete'])) {
-                        $id = (int)$_POST['del_id'];
-                        $del_query = $con->prepare("delete from region where r_id = ?");
-                        $del_query->bind_param('i',$id);
-                        
-                        $del_query->execute();
-                        echo "<meta http-equiv='refresh' content='0'>";
-                      }
-                      ?>
+
                     </div>
                   </div>
                 </div>
@@ -334,7 +328,7 @@ $result = mysqli_query($con, $query);
 
   <!-- Delete function -->
 
-<script>
+  <script>
     $(".delete-button").click(function() {
       var id = $(this).data("id");
       var confirmed = confirm("Are you sure you want to delete this region? \nAll the constituencies, polling stations and parties belonging to this region will also be deleted.");
@@ -343,24 +337,25 @@ $result = mysqli_query($con, $query);
           url: 'delete.php',
           type: 'POST',
           data: {
-            table:'region',
+            table: 'region',
             id: id
           }
         });
       }
-      location.reload();
+      setTimeout(window.location.reload(true),1000);
+      
     });
   </script>
 
-    <!-- Edir function -->
-    <script>
+  <!-- Edir function -->
+  <script>
     $(".edit-button").click(function() {
       var id = $(this).data("id");
       $.ajax({
         url: 'fetch_data.php',
         type: 'POST',
         data: {
-          table:'region',
+          table: 'region',
           id: id
         },
         success: function(response) {
@@ -375,30 +370,30 @@ $result = mysqli_query($con, $query);
     });
   </script>
 
-<!-- Search -->
-<script>
-function search() {
-  // Declare variables
-  var input, filter, table, tr, td, i, txtValue;
-  input = document.getElementById("search");
-  filter = input.value.toUpperCase();
-  table = document.getElementById("main_table");
-  tr = table.getElementsByTagName("tr");
+  <!-- Search -->
+  <script>
+    function search() {
+      // Declare variables
+      var input, filter, table, tr, td, i, txtValue;
+      input = document.getElementById("search");
+      filter = input.value.toUpperCase();
+      table = document.getElementById("main_table");
+      tr = table.getElementsByTagName("tr");
 
-  // Loop through all table rows, and hide those who don't match the search query
-  for (i = 0; i < tr.length; i++) {
-    td = tr[i].getElementsByTagName("td")[1];
-    if (td) {
-      txtValue = td.textContent || td.innerText;
-      if (txtValue.toUpperCase().indexOf(filter) > -1) {
-        tr[i].style.display = "";
-      } else {
-        tr[i].style.display = "none";
+      // Loop through all table rows, and hide those who don't match the search query
+      for (i = 0; i < tr.length; i++) {
+        td = tr[i].getElementsByTagName("td")[1];
+        if (td) {
+          txtValue = td.textContent || td.innerText;
+          if (txtValue.toUpperCase().indexOf(filter) > -1) {
+            tr[i].style.display = "";
+          } else {
+            tr[i].style.display = "none";
+          }
+        }
       }
     }
-  }
-}
-</script>
+  </script>
 
 </body>
 
