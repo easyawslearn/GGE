@@ -1,7 +1,7 @@
 <?php
 require_once("connection.php");
 
-$query = "select c_id,c_name,r_name from constituencies as C inner join region as R on c.r_id=r.r_id where C.is_deleted = false";
+$query = "select c_id,c_name,r_name from constituencies as C inner join region as R on C.r_id=R.r_id where C.is_deleted = false";
 $result = mysqli_query($con, $query);
 ?>
 
