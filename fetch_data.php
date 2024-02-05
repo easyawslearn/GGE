@@ -15,7 +15,7 @@ if (isset($_POST['id'])) {
         $stmt = $con->prepare("SELECT c_id, c_name, r_id FROM constituencies WHERE c_id = ? AND is_deleted = false");
     } 
     elseif ($table == 'ps') {
-        $stmt = $con->prepare("SELECT PS.ps_id, PS.ps_name,PS.c_id,C.r_id FROM polling_station AS PS INNER JOIN constituencies AS C ON PS.c_id=C.c_id  WHERE ps_id = ? AND PS.is_deleted = false");
+        $stmt = $con->prepare("SELECT PS.ps_id, PS.ps_name,PS.c_id,C.r_id,PS.u_id FROM polling_station AS PS INNER JOIN constituencies AS C ON PS.c_id=C.c_id WHERE ps_id = ? AND PS.is_deleted = false");
     } 
     elseif ($table == 'party') {
         $stmt = $con->prepare("SELECT P.p_id, P.p_name, P.ps_id,PS.c_id,C.r_id FROM party AS P INNER JOIN polling_station AS PS ON P.ps_id = PS.ps_id INNER JOIN constituencies AS C ON PS.c_id=C.C_id WHERE p_id = ? AND P.is_deleted = false");
