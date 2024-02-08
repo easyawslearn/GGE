@@ -5,9 +5,26 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
 
   require_once("connection.php");
 
-  $query = "select PS.ps_id,PS.ps_name,C.c_name,R.r_name,COALESCE(U.username, 'None') AS username from polling_station as PS inner join constituencies as C on PS.c_id=C.c_id inner join region as R on C.r_id=R.r_id left join user as U on PS.u_id=U.u_id where PS.is_deleted=false";
+  $constituency_id = mysqli_real_escape_string($con, $_GET['constituency_id']);
 
-  $result = mysqli_query($con, $query);
+  $query = $con->prepare("select c_name,r_id from constituency where c_id= ? and is_deleted = false");
+  $query->bind_param("i", $constituency_id);
+  $query->execute();
+
+  $constituency = $query->get_result();
+  $constituency = $constituency->fetch_assoc();
+
+  $query = $con->prepare("select r_name from region where r_id= ? and is_deleted = false");
+  $query->bind_param("i", $constituency['r_id']);
+  $query->execute();
+
+  $region_name = $query->get_result();
+  $region_name = $region_name->fetch_assoc()['r_name'];
+
+  $query = $con->prepare("select PS.ps_id,PS.ps_name,U.username from polling_station as PS left join user as U on PS.u_id=U.u_id where PS.c_id=? and PS.is_deleted=false");
+  $query->bind_param("i", $constituency_id);
+  $query->execute();
+  $result = $query->get_result();
 ?>
 
   <!DOCTYPE html>
@@ -79,18 +96,7 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
                   <p>Region</p>
                 </a>
               </li>
-              <li class="nav-item">
-                <a href="constituencies.php" class="nav-link">
-                  <i class="nav-icon fas fa-map-marker"></i>
-                  <p>Constituency</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="polling_station.php" class="nav-link active">
-                  <i class="nav-icon fas fa-building"></i>
-                  <p>Polling station</p>
-                </a>
-              </li>
+
               <li class="nav-item">
                 <a href="party.php" class="nav-link">
                   <i class="nav-icon fas fa-users"></i>
@@ -125,7 +131,7 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
         <!-- Main content -->
         <div class="card card-primary">
           <div class="card-header">
-            <h3 class="card-title p-2">Polling stations</h3>
+            <h3 class="card-title p-2">Polling Station</h3>
             <div class="card-tools">
               <button type="button" class="btn btn-success" data-toggle="modal" data-target="#modal-default">
                 <i class="fas fa-plus"></i>
@@ -138,80 +144,47 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
             <div class="modal-dialog modal-dialog-centered">
               <div class="modal-content">
                 <div class="modal-header">
-                  <h4 class="modal-title">Add new polling station</h4>
+                  <h4 class="modal-title">Add Polling Station</h4>
                   <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                   </button>
                 </div>
                 <div class="modal-body">
-                  <form action="" method="POST" class="user_form">
+                  <form action="insert.php?call=polling_station" method="POST" class="user_form">
                     <div class="card-body">
-
                       <div class="form-group">
                         <label for="region">Region</label>
-                        <select name="region_select" id="region" class="custom-select" onchange="updateConstituencies('add')" required>
-                          <option value="" disabled selected>Select a region</option>
-                          <?php
-                          $stmt = $con->prepare("SELECT r_id, r_name FROM region WHERE is_deleted=false ORDER BY r_name ASC");
-                          $stmt->execute();
-                          $region = $stmt->get_result();
-                          while ($row = $region->fetch_assoc()) {
-                          ?>
-                            <option value="<?php echo $row['r_id']; ?>">
-                              <?php echo $row['r_name']; ?>
-                            </option>
-                          <?php
-                          }
-                          ?>
-                        </select>
+                        <input type="text" id="region" class="form-control" name='region' value=<?php echo $region_name; ?> readonly>
                       </div>
-
                       <div class="form-group">
                         <label for="constituency">Constituency</label>
-                        <select name="constituency_select" id="constituency" class="custom-select" required>
-                          <!-- Options will be populated by JavaScript -->
-                        </select>
+                        <input type="hidden" name='c_id' value=<?php echo $constituency_id; ?>>
+                        <input type="text" id="constituency" class="form-control" name='constituency' value=<?php echo $constituency['c_name']; ?> readonly>
                       </div>
-
                       <div class="form-group">
-                        <label for="polling_agent">Polling agent</label>
-                        <select name="polling_agent_select" id="polling_agent" class="custom-select" required>
+                        <label for="polling_station">Polling Station</label>
+                        <input type="text" class="form-control" name='polling_station' id="polling_station" placeholder="Polling Station">
+                      </div>
+                      <div class="form-group">
+                        <label for="polling_agent">Polling Agent</label>
+                        <select name="polling_agent" class="custom-select" id="polling_agent" required>
                           <option value="" disabled selected>Select a polling agent</option>
                           <?php
-                          $pa = $con->prepare("SELECT u_id,username FROM user WHERE user_type='polling_agent' AND is_deleted=false ORDER BY username ASC");
-                          $pa->execute();
-                          $res = $pa->get_result();
-                          while ($row = $res->fetch_assoc()) {
+                          $pa = mysqli_query($con, "SELECT U.u_id, U.username FROM user AS U WHERE U.u_id NOT IN (SELECT PS.u_id FROM polling_station AS PS) AND U.is_deleted = false AND U.user_role = 'polling_agent' ORDER BY U.username ASC");
+                          while ($row = mysqli_fetch_assoc($pa)) {
                           ?>
                             <option value="<?php echo $row['u_id']; ?>">
                               <?php echo $row['username']; ?>
                             </option>
+
                           <?php
                           }
                           ?>
                         </select>
                       </div>
-
-                      <div class="form-group">
-                        <label for="PS">Polling station</label>
-                        <input type="text" name="PS" class="form-control" id="PS" placeholder="Enter name of polling station" required>
-                      </div>
                     </div>
-                    <button id="submit-add" type="submit" name="submit" class="btn btn-primary">Submit</button>
+                    <button id="submit" type="submit" name="submit" class="btn btn-primary">Submit</button>
                   </form>
-                  <?php
-                  if (isset($_POST['submit'])) {
-                    $ps_name = $_POST['PS'];
-                    $u_id = $_POST['polling_agent_select'];
-                    $con_id = $_POST['constituency_select'];
-
-                    $ins = "INSERT INTO polling_station (ps_name,c_id,u_id) VALUES ('$ps_name',$con_id,$u_id)";
-
-                    $run = mysqli_query($con, $ins);
-
-                    echo "<meta http-equiv='refresh' content='0'>";
-                  }
-                  ?>
                 </div>
               </div>
               <!-- /.modal-content -->
@@ -226,7 +199,7 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
             <div class="modal-dialog modal-dialog-centered">
               <div class="modal-content">
                 <div class="modal-header">
-                  <h4 class="modal-title">Edit polling station</h4>
+                  <h4 class="modal-title">Edit Polling Station</h4>
                   <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                   </button>
@@ -236,65 +209,46 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
                     <div class="card-body">
                       <div class="form-group">
                         <label for="Eregion">Region</label>
-                        <select name="Eregion_select" id="region-edit" class="custom-select" onchange="updateConstituencies('edit')" required>
-                          <?php
-                          $stmt = $con->prepare("SELECT r_id, r_name FROM region WHERE is_deleted=false ORDER BY r_name ASC");
-                          $stmt->execute();
-                          $region = $stmt->get_result();
-                          while ($row = $region->fetch_assoc()) {
-                          ?>
-                            <option value="<?php echo $row['r_id']; ?>">
-                              <?php echo $row['r_name']; ?>
-                            </option>
-                          <?php
-                          }
-                          ?>
-                        </select>
+                        <input type="text" class="form-control" id="Eregion" name='Eregion' value=<?php echo $region_name; ?> readonly>
                       </div>
                       <div class="form-group">
                         <label for="Econstituency">Constituency</label>
-                        <select name="Econstituency_select" id="constituency-edit" class="custom-select" required>
-                          <!-- Options will be populated by JavaScript -->
-                        </select>
+                        <input type="text" id="Econstituency" class="form-control" name='Econstituency' value=<?php echo $constituency['c_name']; ?> readonly>
                       </div>
-
                       <div class="form-group">
-                        <label for="Epolling_agent">Polling agent</label>
-                        <select name="Epolling_agent_select" id="Epolling_agent" class="custom-select" required>
-                          <option value="" disabled>None</option>
+                        <label for="Epolling_station">Polling Station</label>
+                        <input type="text" class="form-control" name='Epolling_station' id="Epolling_station" placeholder="Polling Station">
+                        <input type="hidden" id="Eps_id" name="Eps_id">
+                      </div>
+                      <div class="form-group">
+                        <label for="Epolling_agent">Polling Agent</label>
+                        <select name="Epolling_agent" class="custom-select" id="Epolling_agent" required>
                           <?php
-                          $pa = $con->prepare("SELECT u_id,username FROM user WHERE user_type='polling_agent' AND is_deleted=false ORDER BY username ASC");
-                          $pa->execute();
-                          $res = $pa->get_result();
-                          while ($row = $res->fetch_assoc()) {
+                          $pa = mysqli_query($con, "SELECT U.u_id, U.username FROM user AS U WHERE U.u_id NOT IN (SELECT PS.u_id FROM polling_station AS PS) AND U.is_deleted = false AND U.user_role = 'polling_agent' ORDER BY U.username ASC");
+
+                          while ($row = mysqli_fetch_assoc($pa)) {
                           ?>
                             <option value="<?php echo $row['u_id']; ?>">
                               <?php echo $row['username']; ?>
                             </option>
+
                           <?php
                           }
                           ?>
                         </select>
                       </div>
-
-                      <div class="form-group">
-                        <input type="hidden" name="Eps_id" id="Eps_id">
-                        <label for="EPS">Polling Station</label>
-                        <input type="text" name="EPS" class="form-control" id="EPS" placeholder="Enter name of polling station" required>
-                      </div>
                     </div>
-                    <button type="submit" name="edit_submit" id="submit-edit" class="btn btn-primary">Update</button>
+                    <button type="submit" name="edit_submit" class="btn btn-primary">Update</button>
                   </form>
                   <?php
                   if (isset($_POST['edit_submit'])) {
                     $ps_id = $_POST['Eps_id'];
-                    $ps_name = $_POST['EPS'];
-                    $u_id = $_POST['Epolling_agent_select'];
-                    $con_id = $_POST['Econstituency_select'];
+                    $ps_name = $_POST['Epolling_station'];
+                    $ps_agent = $_POST['Epolling_agent'];
 
-                    $upd = "UPDATE polling_station SET ps_name='$ps_name',c_id='$con_id',u_id=$u_id WHERE ps_id = $ps_id";
+                    $ins = "UPDATE polling_station SET ps_name = '$ps_name',u_id = '$ps_agent' WHERE ps_id=$ps_id";
 
-                    $run = mysqli_query($con, $upd);
+                    $run = mysqli_query($con, $ins);
 
                     echo "<meta http-equiv='refresh' content='0'>";
                   }
@@ -310,6 +264,7 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
           <div class="card-body" style="display: block">
             <div class="card">
               <div class="card-header">
+                <h3 class="card-title">Region: <?php echo $region_name; ?> &nbsp; Constituency: <?php echo $constituency['c_name']; ?></h3>
                 <div class="card-tools">
                   <div class="input-group input-group-sm" style="width: 150px;">
                     <input type="text" id="search" onkeyup="search()" name="table_search" class="form-control float-right" placeholder="Search">
@@ -324,11 +279,9 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
                   <thead>
                     <tr>
                       <th>Number</th>
-                      <th>Polling station</th>
-                      <th>Constituency</th>
-                      <th>Region</th>
-                      <th>Polling agent</th>
-                      <th style="text-align: end;padding-right:40px;">Actions</th>
+                      <th>Polling Station</th>
+                      <th>Polling Agent</th>
+                      <th style="text-align: end;padding-right:100px;">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -344,23 +297,21 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
                           <?php echo $row['ps_name']; ?>
                         </td>
                         <td>
-                          <?php echo $row['c_name']; ?>
-                        </td>
-                        <td>
-                          <?php echo $row['r_name']; ?>
-                        </td>
-                        <td>
-                          <?php echo isset($row['username']) ? $row['username'] : 'None'; ?>
+                          <?php echo $row['username']; ?>
                         </td>
                         <td style="text-align: end;">
                           <?php
                           $id = $row['ps_id'];
                           echo "<button type='button' class='btn btn-success edit-button' data-id=$id>
-                      <i class='fas fa-pencil-alt'></i>
-                    </button> &nbsp;&nbsp;";
+                            <i class='fas fa-pencil-alt'></i>
+                          </button> &nbsp;&nbsp;";
+
                           echo "<button type='button' class='btn btn-danger delete-button' data-id=$id>
-                      <i class='fas fa-trash'></i>
-                    </button>";
+                            <i class='fas fa-trash'></i>
+                          </button> &nbsp;&nbsp;";
+
+                          echo "<a href='ps_party.php?polling_station_id=$id' class='btn btn-primary polling_station-button'>Party</a>";
+
                           $number++;
                           ?>
                         </td>
@@ -429,39 +380,9 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
             }
           });
         }
-        // window.location.reload(true);
         setTimeout(window.location.reload(true), 1000);
 
       });
-    </script>
-
-    <!-- Constituency fetcher -->
-    <script>
-      function updateConstituencies(call = 'add') {
-        let regionId;
-        if (call == "add") {
-          regionId = document.getElementById('region').value;
-        } else if (call == "edit") {
-          regionId = document.getElementById('region-edit').value;
-        }
-
-        let xhr = new XMLHttpRequest();
-        xhr.open('GET', 'select_menu_data.php?region_id=' + regionId, true);
-        xhr.onload = function() {
-          if (this.status == 200) {
-            let selectId = (call == "add") ? 'constituency' : 'constituency-edit';
-            if (this.responseText.trim() === '') {
-              document.getElementById(selectId).innerHTML = '<option>No constituencies found</option>';
-              document.getElementById('submit-' + call).disabled = true;
-            } else {
-              document.getElementById('submit-' + call).disabled = false;
-              document.getElementById(selectId).innerHTML = this.responseText;
-            }
-          }
-        }
-        xhr.send();
-      }
-      window.onload = updateConstituencies('add');
     </script>
 
     <!-- Edit function -->
@@ -479,35 +400,18 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
             var data = JSON.parse(response);
 
             $("#Eps_id").val(data.ps_id);
-            $("#EPS").val(data.ps_name);
+            $("#Epolling_station").val(data.ps_name);
 
+            // $("#Epolling_agent option").each(function() {
+            //   if ($(this).val() == (data.u_id)) {
+            //     $(this).prop('selected', true);
+            //   } else {
+            //     $(this).prop('selected', false);
+            //   }
+            // });
 
-            $("#region-edit option").each(function() {
-              if ($(this).val() == data.r_id) {
-                $(this).prop('selected', true);
-              } else {
-                $(this).prop('selected', false);
-              }
-            });
+            $('#Epolling_agent').append(new Option(data.username, data.u_id, true, true))
 
-            updateConstituencies('edit');
-
-            $("#Econstituency-edit option").each(function() {
-              if ($(this).val() == data.c_id) {
-                $(this).prop('selected', true);
-              } else {
-                $(this).prop('selected', false);
-              }
-            });
-            $("#Epolling_agent option").each(function() {
-              if ($(this).val() == (data.u_id == null ? '' : data.u_id)) {
-                $(this).prop('selected', true);
-              } else {
-                $(this).prop('selected', false);
-              }
-            });
-
-            console.log(data.u_id);
             $('#modal-edit').modal('show');
           }
         });

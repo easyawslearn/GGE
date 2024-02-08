@@ -78,20 +78,6 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
               </li>
 
               <li class="nav-item">
-                <a href="constituencies.php" class="nav-link">
-                  <i class="nav-icon fas fa-map-marker"></i>
-                  <p>Constituency</p>
-                </a>
-              </li>
-
-              <li class="nav-item">
-                <a href="polling_station.php" class="nav-link">
-                  <i class="nav-icon fas fa-building"></i>
-                  <p>Polling station</p>
-                </a>
-              </li>
-
-              <li class="nav-item">
                 <a href="party.php" class="nav-link">
                   <i class="nav-icon fas fa-users"></i>
                   <p>Party</p>

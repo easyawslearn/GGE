@@ -19,20 +19,21 @@ if (isset($_GET['region_id'])) {
     while ($row = $consti->fetch_assoc()) {
         echo '<option value="' . $row['c_id'] . '">' . $row['c_name'] . '</option>';
     }
-    } elseif (isset($_GET['constituency_id'])) {
+    } 
+    // elseif (isset($_GET['constituency_id'])) {
 
-    $constituencyId = intval($_GET['constituency_id']);  
+    // $constituencyId = intval($_GET['constituency_id']);  
 
-    $stmt = $con->prepare("SELECT ps_id, ps_name FROM polling_station WHERE c_id = ? AND is_deleted = false ORDER BY ps_name ASC");
-    $stmt->bind_param("i", $constituencyId);
+    // $stmt = $con->prepare("SELECT ps_id, ps_name FROM polling_station WHERE c_id = ? AND is_deleted = false ORDER BY ps_name ASC");
+    // $stmt->bind_param("i", $constituencyId);
 
-    $stmt->execute();
+    // $stmt->execute();
 
-    $ps = $stmt->get_result();
+    // $ps = $stmt->get_result();
 
-    while ($row = $ps->fetch_assoc()) {
-        echo '<option value="' . $row['ps_id'] . '">' . $row['ps_name'] . '</option>';
-    }
+    // while ($row = $ps->fetch_assoc()) {
+    //     echo '<option value="' . $row['ps_id'] . '">' . $row['ps_name'] . '</option>';
+    // }
 
-    $stmt->close();
-}
+//     $stmt->close();
+// }

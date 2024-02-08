@@ -4,8 +4,13 @@ session_start();
 if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
   require_once("connection.php");
 
-  $query = "select u_id,username,user_type from user where is_deleted = false";
+  $query = "select u_id,username,user_role from user where is_deleted = false";
   $result = mysqli_query($con, $query);
+
+  if (isset($_SESSION['message']) && $_SESSION['message'] == 'no_delete') {
+    echo "<script>alert('Cannot delete user as they are linked to a polling station.')</script>";
+    unset($_SESSION['message']);
+  }
 ?>
 
   <!DOCTYPE html>
@@ -84,18 +89,6 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
               </li>
 
               <li class="nav-item">
-                <a href="constituencies.php" class="nav-link">
-                  <i class="nav-icon fas fa-map-marker"></i>
-                  <p>Constituency</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="polling_station.php" class="nav-link">
-                  <i class="nav-icon fas fa-building"></i>
-                  <p>Polling station</p>
-                </a>
-              </li>
-              <li class="nav-item">
                 <a href="party.php" class="nav-link">
                   <i class="nav-icon fas fa-users"></i>
                   <p>Party</p>
@@ -148,7 +141,7 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
                   </button>
                 </div>
                 <div class="modal-body">
-                  <form action="" method="POST" class="user_form">
+                  <form action="insert.php?call=user" method="POST" class="user_form">
                     <div class="card-body">
                       <div class="form-group">
                         <label for="username">Username</label>
@@ -165,9 +158,9 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
                         <label class="form-check-label" for="show_passwd">Show password</label>
                       </div>
                       <div class="form-group">
-                        <label for="user_type">User type</label>
-                        <select name="user_type" id="user_type" class="custom-select" required>
-                          <option value="" disabled selected>Select user type</option>
+                        <label for="user_role">User Role</label>
+                        <select name="user_role" id="user_role" class="custom-select" required>
+                          <option value="" disabled selected>Select User Role</option>
                           <option value="admin">Admin</option>
                           <option value="executive">Executive</option>
                           <option value="polling_agent">Polling agent</option>
@@ -176,22 +169,6 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
                     </div>
                     <button id="submit" type="submit" name="submit" class="btn btn-primary">Submit</button>
                   </form>
-                  <?php
-                  if (isset($_POST['submit'])) {
-                    $username = $_POST['username'];
-                    $password = $_POST['passwd'];
-                    $user_type = $_POST['user_type'];
-
-                    $ins_query = "INSERT INTO user (username,password,user_type)VALUES('$username','$password','$user_type')";
-
-                    $ins = mysqli_query($con, $ins_query);
-                    echo "<meta http-equiv='refresh' content='0'>";
-
-                    if ($ins === false) {
-                      echo "<script>alert('Could not create new user please try again.');</script>";
-                    }
-                  }
-                  ?>
                 </div>
               </div>
               <!-- /.modal-content -->
@@ -229,8 +206,8 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
                         <label class="form-check-label" for="show_passwd">Show password</label>
                       </div>
                       <div class="form-group">
-                        <label for="Euser_type">User type</label>
-                        <select name="Euser_type" id="Euser_type" class="custom-select">
+                        <label for="Euser_role">User Role</label>
+                        <select name="Euser_role" id="Euser_role" class="custom-select">
                           <option value="admin">Admin</option>
                           <option value="executive">Executive</option>
                           <option value="polling_agent">Polling agent</option>
@@ -244,9 +221,9 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
                     $u_id = $_POST['Eu_id'];
                     $username = $_POST['Eusername'];
                     $password = $_POST['Epasswd'];
-                    $user_type = $_POST['Euser_type'];
+                    $user_role = $_POST['Euser_role'];
 
-                    $upd_query = "UPDATE user SET username='$username',password='$password',user_type='$user_type' WHERE u_id=$u_id";
+                    $upd_query = "UPDATE user SET username='$username',password='$password',user_role='$user_role' WHERE u_id=$u_id";
 
                     $upd = mysqli_query($con, $upd_query);
                     echo "<meta http-equiv='refresh' content='0'>";
@@ -283,7 +260,7 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
                     <tr>
                       <th>Number</th>
                       <th>Username</th>
-                      <th>User type</th>
+                      <th>User Type</th>
                       <th style="text-align: end;padding-right:40px;">Actions</th>
                     </tr>
                   </thead>
@@ -300,7 +277,7 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
                           <?php echo $row['username']; ?>
                         </td>
                         <td>
-                          <?php echo $row['user_type']; ?>
+                          <?php echo $row['user_role']; ?>
                         </td>
                         <td style="text-align: end;">
                           <?php
@@ -311,7 +288,6 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
 
                           echo "<button type='button' class='btn btn-danger delete-button' data-id=$id><i class='fas fa-trash'></i></button>";
                           $number++;
-
                           ?>
                         </td>
                     </tr>
@@ -418,7 +394,7 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
             $("#Eu_id").val(data.u_id);
             $("#Eusername").val(data.username);
             $("#Epassword").val(data.password);
-            $("#Euser_type").val(data.user_type);
+            $("#Euser_role").val(data.user_role);
 
             $('#modal-edit').modal('show');
           }
@@ -487,6 +463,10 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
 
   </html>
 <?php
+  if (isset($_SESSION['message']) && $_SESSION['message'] == 'duplicate') {
+    echo "<script>alert('User already exists with this username.')</script>";
+    unset($_SESSION['message']);
+  }
 } else {
   header('Location: index.php');
 }

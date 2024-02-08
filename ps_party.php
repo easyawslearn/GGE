@@ -5,9 +5,33 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
 
   require_once("connection.php");
 
-  $query = "SELECT p_id,p_name FROM party WHERE is_deleted=false";
+  $ps_id = mysqli_real_escape_string($con, $_GET['polling_station_id']);
 
-  $result = mysqli_query($con, $query);
+  $query = $con->prepare("select ps_name,c_id from polling_station where ps_id= ? and is_deleted = false");
+  $query->bind_param("i", $ps_id);
+  $query->execute();
+
+  $polling_station = $query->get_result();
+  $polling_station = $polling_station->fetch_assoc();
+
+  $query = $con->prepare("select c_name,r_id from constituency where c_id= ? and is_deleted = false");
+  $query->bind_param("i", $polling_station['c_id']);
+  $query->execute();
+
+  $constituency = $query->get_result();
+  $constituency = $constituency->fetch_assoc();
+
+  $query = $con->prepare("select r_name from region where r_id= ? and is_deleted = false");
+  $query->bind_param("i", $constituency['r_id']);
+  $query->execute();
+
+  $region = $query->get_result();
+  $region = $region->fetch_assoc();
+
+  $query = $con->prepare("SELECT p_id,p_name FROM party WHERE is_deleted=false");
+  $query->execute();
+  $result = $query->get_result();
+
 ?>
 
   <!DOCTYPE html>
@@ -81,7 +105,7 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
               </li>
 
               <li class="nav-item">
-                <a href="party.php" class="nav-link active">
+                <a href="party.php" class="nav-link">
                   <i class="nav-icon fas fa-users"></i>
                   <p>Party</p>
                 </a>
@@ -122,82 +146,10 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
               </button>
             </div>
           </div>
-
-          <div class="modal fade" id="modal-default">
-            <div class="modal-dialog modal-dialog-centered">
-              <div class="modal-content">
-                <div class="modal-header">
-                  <h4 class="modal-title">Add new party</h4>
-                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                  </button>
-                </div>
-                <div class="modal-body">
-                  <form action="insert.php?call=party" method="POST">
-                    <div class="card-body">
-                      <div class="form-group">
-                        <label for="party">Party</label>
-                        <input type="text" name="party" class="form-control" id="party" placeholder="Enter name of party" required>
-                      </div>
-
-                    </div>
-                    <button id="submit-add" type="submit" name="submit" class="btn btn-primary">Submit</button>
-                  </form>
-                </div>
-              </div>
-              <!-- /.modal-content -->
-            </div>
-            <!-- /.modal-dialog -->
-          </div>
-          <!-- /.modal -->
-
-          <!-- Edit data modal -->
-
-          <div class="modal fade" id="modal-edit">
-            <div class="modal-dialog modal-dialog-centered">
-              <div class="modal-content">
-                <div class="modal-header">
-                  <h4 class="modal-title">Edit party</h4>
-                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                  </button>
-                </div>
-                <div class="modal-body">
-                  <form action="" method="POST">
-                    <div class="card-body">
-
-                      <div class="form-group">
-                        <input type="hidden" name="Ep_id" id="Ep_id">
-                        <label for="Eparty">Party</label>
-                        <input type="text" name="Eparty" class="form-control" id="Eparty" placeholder="Enter name of party" required>
-                      </div>
-
-                    </div>
-                    <button type="submit" name="edit_submit" id="submit-edit" class="btn btn-primary">Update</button>
-                  </form>
-                  <?php
-                  if (isset($_POST['edit_submit'])) {
-                    $p_id = $_POST['Ep_id'];
-                    $p_name = $_POST['Eparty'];
-
-                    $upd = "UPDATE party SET p_name = '$p_name' WHERE p_id = $p_id";
-
-                    $run = mysqli_query($con, $upd);
-
-                    echo "<meta http-equiv='refresh' content='0'>";
-                  }
-                  ?>
-                </div>
-              </div>
-              <!-- /.modal-content -->
-            </div>
-            <!-- /.modal-dialog -->
-          </div>
-          <!-- /.modal -->
-
           <div class="card-body" style="display: block">
             <div class="card">
               <div class="card-header">
+                <h3 class="card-title">Region: <?php echo $region['r_name']; ?> &nbsp; Constituency: <?php echo $constituency['c_name']; ?> &nbsp; Polling Station: <?php echo $polling_station['ps_name'] ?></h3>
                 <div class="card-tools">
                   <div class="input-group input-group-sm" style="width: 150px;">
                     <input type="text" id="search" onkeyup="search()" name="table_search" class="form-control float-right" placeholder="Search">
@@ -213,7 +165,7 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
                     <tr>
                       <th>Number</th>
                       <th>Party</th>
-                      <th style="text-align: end;padding-right:40px;">Actions</th>
+                      <th>Action</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -221,27 +173,27 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
                       <?php
                       $number = 1;
                       while ($row = mysqli_fetch_assoc($result)) {
+                        $partyId = $row['p_id'];
+
+                        // Check if the party is in the ps_party table with the polling station foreign key
+                        $stmt = $con->prepare("SELECT * FROM ps_party WHERE p_id = ? AND ps_id = ? AND is_deleted = false");
+                        $stmt->bind_param("ii", $partyId, $ps_id); // replace $polling_station_id with your polling station id
+                        $stmt->execute();
+                        $ps_party_result = $stmt->get_result();
+
+                        // If the party is in the ps_party table, set the checkbox to be checked
+                        $isChecked = $ps_party_result->num_rows > 0 ? "checked" : "";
                       ?>
-                        <td>
-                          <?php echo $number; ?>
-                        </td>
-                        <td>
-                          <?php echo $row['p_name']; ?>
-                        </td>
-                        <td style="text-align: end;">
-                          <?php
-                          $id = $row['p_id'];
-                          echo "<button type='button' class='btn btn-success edit-button' data-id=$id>
-                      <i class='fas fa-pencil-alt'></i>
-                    </button> &nbsp;&nbsp;";
-                          echo "<button type='button' class='btn btn-danger delete-button' data-id=$id>
-                      <i class='fas fa-trash'></i>
-                    </button>";
-                          $number++;
-                          ?>
-                        </td>
+                    <tr>
+                      <td><?php echo $number; ?></td>
+                      <td><?php echo $row['p_name']; ?></td>
+                      <td>&nbsp;&nbsp;&nbsp;
+                        <input type='checkbox' id='party' value='<?php echo $partyId; ?>' <?php echo $isChecked; ?>>
+                        <input type="hidden" name="ps_id" id="ps_id" value=<?php echo $ps_id; ?>>
+                      </td>
                     </tr>
                   <?php
+                        $number++;
                       }
                   ?>
                   </tr>
@@ -290,49 +242,32 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
       }
     </script>
 
-    <!-- Delete function -->
+
+    <!-- Checkbox function -->
     <script>
-      $(".delete-button").click(function() {
-        var id = $(this).data("id");
-        var confirmed = confirm("Are you sure you want to delete this party?");
-        if (confirmed) {
+      $(document).ready(function() {
+        $('input[type="checkbox"]').change(function() {
+          var isChecked = $(this).is(':checked');
+          var partyId = $(this).val();
+          var polling_station = $(ps_id).val();
+
           $.ajax({
-            url: 'delete.php',
-            type: 'POST',
+            url: 'handle_checkbox.php',
+            type: 'post',
             data: {
-              table: 'party',
-              id: id
+              'isChecked': isChecked,
+              'partyId': partyId,
+              'ps_id': polling_station
+            },
+            success: function(response) {
+              
             }
           });
-        }
-        window.location.reload(true);
-      });
-    </script>
-
-    <!-- Constituencies and polling station fetcher -->
-
-    <!-- Edit function -->
-    <script>
-      $(".edit-button").click(function() {
-        var id = $(this).data("id");
-        $.ajax({
-          url: 'fetch_data.php',
-          type: 'POST',
-          data: {
-            table: 'party',
-            id: id
-          },
-          success: function(response) {
-            var data = JSON.parse(response);
-
-            $("#Ep_id").val(data.p_id);
-            $('#Eparty').val(data.p_name);
-
-            $('#modal-edit').modal('show');
-          }
         });
       });
     </script>
+
+
 
     <!-- Search -->
     <script>

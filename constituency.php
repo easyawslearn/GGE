@@ -1,13 +1,25 @@
 <?php
+
 session_start();
 
 if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
 
   require_once("connection.php");
 
-  $query = "select * from region where is_deleted = false";
-  $result = mysqli_query($con, $query);
+  $region_id = mysqli_real_escape_string($con, $_GET['region_id']);
 
+  $query = $con->prepare("select r_name from region where r_id= ? and is_deleted = false");
+  $query->bind_param("i", $region_id);
+  $query->execute();
+
+  $region_name = $query->get_result();
+  $region_name = $region_name->fetch_assoc()['r_name'];
+
+  $query = $con->prepare("select c_id,c_name from constituency where r_id= ? and is_deleted = false");
+  $query->bind_param("i", $region_id);
+  $query->execute();
+
+  $result = $query->get_result();
 ?>
 
   <!DOCTYPE html>
@@ -66,7 +78,6 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
           <!-- Sidebar Menu -->
           <nav class="mt-2">
             <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
-
               <li class="nav-item">
                 <a href="user.php" class="nav-link">
                   <i class="nav-icon fas fa-user"></i>
@@ -75,7 +86,7 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
               </li>
 
               <li class="nav-item">
-                <a href="region.php" class="nav-link active">
+                <a href="region.php" class="nav-link">
                   <i class="nav-icon fas fa-map"></i>
                   <p>Region</p>
                 </a>
@@ -115,7 +126,7 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
         <!-- Main content -->
         <div class="card card-primary">
           <div class="card-header">
-            <h3 class="card-title p-2" id="h3">Region</h3>
+            <h3 class="card-title p-2">Constituency</h3>
             <div class="card-tools">
               <button type="button" class="btn btn-success" data-toggle="modal" data-target="#modal-default">
                 <i class="fas fa-plus"></i>
@@ -128,23 +139,35 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
             <div class="modal-dialog modal-dialog-centered">
               <div class="modal-content">
                 <div class="modal-header">
-                  <h4 class="modal-title">Add new region</h4>
+                  <h4 class="modal-title">Add Constituency</h4>
                   <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                   </button>
                 </div>
                 <div class="modal-body">
-                  <form class="region_form" action="insert.php?call=region" id="region-form" method="POST">
+                  <form action="insert.php?call=constituency" method="POST" class="user_form">
                     <div class="card-body">
                       <div class="form-group">
-                        <label for="region_name">Region</label>
-                        <input type="text" name="r_name" class="form-control" id="region_name" placeholder="Enter region" required>
-                        <div id="error"></div>
+                        <label for="regions">Region</label>
+                        <input type="hidden" name="r_id" value=<?php echo $region_id; ?>>
+                        <input type="test" class="form-control" name='region' value=<?php echo $region_name; ?> readonly>
+                      </div>
+                      <div class="form-group">
+                        <label for="constituency">Constituency</label>
+                        <input type="text" name="constituency" class="form-control" id="constituency" placeholder="Enter name of constituency" required>
                       </div>
                     </div>
-                    <button type="submit" id="submit" name="submit" class="btn btn-primary">Submit</button>
+                    <button id="submit" type="submit" name="submit" class="btn btn-primary">Submit</button>
                   </form>
                   <?php
+                  if (isset($_POST['submit'])) {
+
+                    $ins = "INSERT INTO constituency (c_name,r_id) VALUES ('$c_name',$region_id)";
+
+                    $run = mysqli_query($con, $ins);
+
+                    echo "<meta http-equiv='refresh' content='0'>";
+                  }
                   ?>
                 </div>
               </div>
@@ -155,33 +178,42 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
           <!-- /.modal -->
 
           <!-- Edit data modal -->
+
           <div class="modal fade" id="modal-edit">
             <div class="modal-dialog modal-dialog-centered">
               <div class="modal-content">
                 <div class="modal-header">
-                  <h4 class="modal-title">Edit region</h4>
+                  <h4 class="modal-title">Edit constituency</h4>
                   <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                   </button>
                 </div>
                 <div class="modal-body">
-                  <form action="" method="POST" class="region_form">
+                  <form action="" method="POST" class="user_form">
                     <div class="card-body">
                       <div class="form-group">
-                        <label for="Eregion_name">Region</label>
-                        <input type="text" name="Er_name" class="form-control" id="Eregion_name" placeholder="Enter region" required>
-                        <input type="hidden" name='Er_id' id="Er_id">
+                        <label for="regions">Region</label>
+                        <input type="hidden" name="Er_id" value=<?php echo $region_id; ?>>
+                        <input type="test" class="form-control" name='Eregion' value=<?php echo $region_name; ?> readonly>
+                      </div>
+                      <div class="form-group">
+                        <label for="Econstituency">Constituency</label>
+                        <input type="hidden" id="Ec_id" name="Ec_id">
+                        <input type="text" name="Econstituency" class="form-control" id="Econstituency" placeholder="Enter name of constituency" required>
                       </div>
                     </div>
                     <button type="submit" name="edit_submit" class="btn btn-primary">Update</button>
                   </form>
                   <?php
                   if (isset($_POST['edit_submit'])) {
-                    $r_id = $_POST['Er_id'];
-                    $r_name = $_POST['Er_name'];
+                    $c_id = $_POST['Ec_id'];
+                    $c_name = $_POST['Econstituency'];
 
-                    $ins = mysqli_query($con, "UPDATE region SET r_name='$r_name' WHERE r_id = $r_id");
-                    $result = mysqli_query($con, $query);
+                    $ins = "UPDATE constituency SET c_name = '$c_name' WHERE c_id = $c_id";
+
+                    $run = mysqli_query($con, $ins);
+
+                    echo "<meta http-equiv='refresh' content='0'>";
                   }
                   ?>
                 </div>
@@ -195,9 +227,10 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
           <div class="card-body" style="display: block">
             <div class="card">
               <div class="card-header">
+                <h3 class="card-title">Region: <?php echo $region_name; ?></h3>
                 <div class="card-tools">
                   <div class="input-group input-group-sm" style="width: 150px;">
-                    <input type="text" id="search" name="table_search" onkeyup="search()" class="form-control float-right" placeholder="Search">
+                    <input type="text" id="search" onkeyup="search()" name="table_search" class="form-control float-right" placeholder="Search">
                     <div class="input-group-append btn">
                       <i class="fas fa-search"></i>
                     </div>
@@ -209,7 +242,7 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
                   <thead>
                     <tr>
                       <th>Number</th>
-                      <th>Region</th>
+                      <th>Constituency</th>
                       <th style="text-align: end;padding-right:100px;">Actions</th>
                     </tr>
                   </thead>
@@ -223,18 +256,20 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
                           <?php echo $number; ?>
                         </td>
                         <td>
-                          <?php echo $row['r_name']; ?>
+                          <?php echo $row['c_name']; ?>
                         </td>
                         <td style="text-align: end;">
                           <?php
-                          $id = $row['r_id'];
+                          $id = $row['c_id'];
                           echo "<button type='button' class='btn btn-success edit-button' data-id=$id>
-                          <i class='fas fa-pencil-alt'></i>
+                            <i class='fas fa-pencil-alt'></i>
                           </button> &nbsp;&nbsp;";
 
-                          echo "<button type='button' class='btn btn-danger delete-button' data-id=$id><i class='fas fa-trash'></i></button> &nbsp;&nbsp;";
+                          echo "<button type='button' class='btn btn-danger delete-button' data-id=$id>
+                            <i class='fas fa-trash'></i>
+                          </button> &nbsp;&nbsp;";
 
-                          echo "<a href='constituency.php?region_id=$id' class='btn btn-primary constituency-button'>Constituency</a>";
+                          echo "<a href='polling_station.php?constituency_id=$id' class='btn btn-primary polling_station-button'>Polling Station</a>";
 
                           $number++;
                           ?>
@@ -246,41 +281,13 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
                   </tr>
                   </tbody>
                 </table>
-                <div class="modal fade" id="confirmation" style="display: none;" aria-hidden="true">
-                  <div class="modal-dialog">
-                    <div class="modal-content">
-                      <div class="modal-header">
-                        <h4 class="modal-title">Confirmation</h4>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                          <span aria-hidden="true">×</span>
-                        </button>
-                      </div>
-                      <div class="modal-body">
-                        <form action="" method="POST">
-                          <lable>Please confirm the ID of the region you want to delete</lable>
-                          <input class="form-control float-right" type="text" name="del_id" placeholder="Region ID">
-                      </div>
-                      <div class="modal-footer justify-content-between">
-                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                        <button id="submit" type="submit" name="delete" class="btn btn-danger">Delete</button>
-                        </form>
-
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
               </div>
             </div>
           </div>
         </div>
       </div>
-
-
       <!-- /.content-wrapper-->
 
-
-      <!-- Add form -->
 
       <!-- Control Sidebar -->
       <aside class="control-sidebar control-sidebar-dark">
@@ -295,7 +302,6 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
       <!-- Main Footer -->
       <footer class="main-footer">
         <!-- To the right -->
-        <!-- <div class="float-right d-none d-sm-inline">Anything you want</div> -->
         <!-- Default to the left -->
         <strong>Copyright &copy; 2024 GGE
           All rights reserved.
@@ -319,27 +325,26 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
     </script>
 
     <!-- Delete function -->
-
     <script>
       $(".delete-button").click(function() {
         var id = $(this).data("id");
-        var confirmed = confirm("Are you sure you want to delete this region? \nAll the constituencies, polling stations and parties belonging to this region will also be deleted.");
+        var confirmed = confirm("Are you sure you want to delete this constituency? \nAll the polling stations and parties belonging to this constituency will also be deleted.");
         if (confirmed) {
           $.ajax({
             url: 'delete.php',
             type: 'POST',
             data: {
-              table: 'region',
+              table: 'cons',
               id: id
             }
           });
         }
+        // window.location.reload(true);
         setTimeout(window.location.reload(true), 1000);
-
       });
     </script>
 
-    <!-- Edir function -->
+    <!-- Edit function -->
     <script>
       $(".edit-button").click(function() {
         var id = $(this).data("id");
@@ -347,14 +352,22 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
           url: 'fetch_data.php',
           type: 'POST',
           data: {
-            table: 'region',
+            table: 'cons',
             id: id
           },
           success: function(response) {
             var data = JSON.parse(response);
 
-            $("#Er_id").val(data.r_id);
-            $("#Eregion_name").val(data.r_name);
+            $("#Ec_id").val(data.c_id);
+            $("#Econstituency").val(data.c_name);
+
+            $("#Eregion option").each(function() {
+              if ($(this).val() == data.r_id) {
+                $(this).prop('selected', true);
+              } else {
+                $(this).prop('selected', false);
+              }
+            });
 
             $('#modal-edit').modal('show');
           }
@@ -386,13 +399,12 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
         }
       }
     </script>
-
   </body>
 
   </html>
 <?php
   if (isset($_SESSION['message']) && $_SESSION['message'] == 'duplicate') {
-    echo "<script>alert('Region already exists.')</script>";
+    echo "<script>alert('Constituency with this name already exists in this region.')</script>";
     unset($_SESSION['message']);
   }
 } else {
