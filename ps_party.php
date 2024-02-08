@@ -140,6 +140,7 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
           <div class="card-header">
             <h3 class="card-title p-2">Party</h3>
             <div class="card-tools">
+              <a href="polling_station.php?constituency_id=<?php echo $polling_station['c_id']; ?>" class="btn btn-warning"><i class="fas fa-arrow-left"></i>&nbsp;&nbsp;Back</a>
               <button type="button" class="btn btn-success" data-toggle="modal" data-target="#modal-default">
                 <i class="fas fa-plus"></i>
                 &nbsp;&nbsp;Add
@@ -260,7 +261,7 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
               'ps_id': polling_station
             },
             success: function(response) {
-              
+
             }
           });
         });

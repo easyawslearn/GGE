@@ -133,6 +133,7 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
           <div class="card-header">
             <h3 class="card-title p-2">Polling Station</h3>
             <div class="card-tools">
+              <a href="constituency.php?region_id=<?php echo $constituency['r_id'];?>" class="btn btn-warning"><i class="fas fa-arrow-left"></i>&nbsp;&nbsp;Back</a>
               <button type="button" class="btn btn-success" data-toggle="modal" data-target="#modal-default">
                 <i class="fas fa-plus"></i>
                 &nbsp;&nbsp;Add
@@ -170,7 +171,7 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
                         <select name="polling_agent" class="custom-select" id="polling_agent" required>
                           <option value="" disabled selected>Select a polling agent</option>
                           <?php
-                          $pa = mysqli_query($con, "SELECT U.u_id, U.username FROM user AS U WHERE U.u_id NOT IN (SELECT PS.u_id FROM polling_station AS PS) AND U.is_deleted = false AND U.user_role = 'polling_agent' ORDER BY U.username ASC");
+                          $pa = mysqli_query($con, "SELECT U.u_id, U.username FROM user AS U WHERE U.u_id NOT IN (SELECT PS.u_id FROM polling_station AS PS WHERE PS.is_deleted=false) AND U.is_deleted = false AND U.user_role = 'polling_agent' ORDER BY U.username ASC");
                           while ($row = mysqli_fetch_assoc($pa)) {
                           ?>
                             <option value="<?php echo $row['u_id']; ?>">
@@ -205,7 +206,7 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
                   </button>
                 </div>
                 <div class="modal-body">
-                  <form action="" method="POST" class="user_form">
+                  <form action="edit.php?call=polling_station" method="POST" class="user_form">
                     <div class="card-body">
                       <div class="form-group">
                         <label for="Eregion">Region</label>
@@ -214,6 +215,7 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
                       <div class="form-group">
                         <label for="Econstituency">Constituency</label>
                         <input type="text" id="Econstituency" class="form-control" name='Econstituency' value=<?php echo $constituency['c_name']; ?> readonly>
+                        <input type="hidden" name="Ec_id" value=<?php echo $constituency_id; ?>>
                       </div>
                       <div class="form-group">
                         <label for="Epolling_station">Polling Station</label>
@@ -224,7 +226,7 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
                         <label for="Epolling_agent">Polling Agent</label>
                         <select name="Epolling_agent" class="custom-select" id="Epolling_agent" required>
                           <?php
-                          $pa = mysqli_query($con, "SELECT U.u_id, U.username FROM user AS U WHERE U.u_id NOT IN (SELECT PS.u_id FROM polling_station AS PS) AND U.is_deleted = false AND U.user_role = 'polling_agent' ORDER BY U.username ASC");
+                          $pa = mysqli_query($con, "SELECT U.u_id, U.username FROM user AS U WHERE U.u_id NOT IN (SELECT PS.u_id FROM polling_station AS PS WHERE PS.is_deleted=false) AND U.is_deleted = false AND U.user_role = 'polling_agent' ORDER BY U.username ASC");
 
                           while ($row = mysqli_fetch_assoc($pa)) {
                           ?>
@@ -240,19 +242,7 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
                     </div>
                     <button type="submit" name="edit_submit" class="btn btn-primary">Update</button>
                   </form>
-                  <?php
-                  if (isset($_POST['edit_submit'])) {
-                    $ps_id = $_POST['Eps_id'];
-                    $ps_name = $_POST['Epolling_station'];
-                    $ps_agent = $_POST['Epolling_agent'];
 
-                    $ins = "UPDATE polling_station SET ps_name = '$ps_name',u_id = '$ps_agent' WHERE ps_id=$ps_id";
-
-                    $run = mysqli_query($con, $ins);
-
-                    echo "<meta http-equiv='refresh' content='0'>";
-                  }
-                  ?>
                 </div>
               </div>
               <!-- /.modal-content -->
@@ -402,14 +392,6 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
             $("#Eps_id").val(data.ps_id);
             $("#Epolling_station").val(data.ps_name);
 
-            // $("#Epolling_agent option").each(function() {
-            //   if ($(this).val() == (data.u_id)) {
-            //     $(this).prop('selected', true);
-            //   } else {
-            //     $(this).prop('selected', false);
-            //   }
-            // });
-
             $('#Epolling_agent').append(new Option(data.username, data.u_id, true, true))
 
             $('#modal-edit').modal('show');
@@ -448,6 +430,10 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
 
   </html>
 <?php
+  if (isset($_SESSION['message']) && $_SESSION['message'] == 'duplicate') {
+    echo "<script>alert('Polling Station with this name already exists.')</script>";
+    unset($_SESSION['message']);
+  }
 } else {
   header('Location: index.php');
 }

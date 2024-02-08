@@ -189,7 +189,7 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
                   </button>
                 </div>
                 <div class="modal-body">
-                  <form action="" method="POST" class="user_form">
+                  <form action="edit.php?call=user" method="POST" class="user_form">
                     <div class="card-body">
                       <div class="form-group">
                         <input type="hidden" name="Eu_id" id="Eu_id">
@@ -216,23 +216,7 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
                     </div>
                     <button type="submit" name="edit_submit" class="btn btn-primary">Update</button>
                   </form>
-                  <?php
-                  if (isset($_POST['edit_submit'])) {
-                    $u_id = $_POST['Eu_id'];
-                    $username = $_POST['Eusername'];
-                    $password = $_POST['Epasswd'];
-                    $user_role = $_POST['Euser_role'];
-
-                    $upd_query = "UPDATE user SET username='$username',password='$password',user_role='$user_role' WHERE u_id=$u_id";
-
-                    $upd = mysqli_query($con, $upd_query);
-                    echo "<meta http-equiv='refresh' content='0'>";
-
-                    if ($upd === false) {
-                      echo "<script>alert('Could not create new user please try again.');</script>";
-                    }
-                  }
-                  ?>
+                  
                 </div>
               </div>
               <!-- /.modal-content -->
@@ -260,7 +244,7 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
                     <tr>
                       <th>Number</th>
                       <th>Username</th>
-                      <th>User Type</th>
+                      <th>User Role</th>
                       <th style="text-align: end;padding-right:40px;">Actions</th>
                     </tr>
                   </thead>
@@ -277,7 +261,19 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
                           <?php echo $row['username']; ?>
                         </td>
                         <td>
-                          <?php echo $row['user_role']; ?>
+                          <?php
+                          switch ($row['user_role']) {
+                            case 'admin':
+                              echo 'Admin';
+                              break;
+                            case 'executive':
+                              echo 'Executive';
+                              break;
+                            case 'polling_agent':
+                              echo 'Polling Agent';
+                              break;
+                          }
+                          ?>
                         </td>
                         <td style="text-align: end;">
                           <?php

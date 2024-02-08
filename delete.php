@@ -26,7 +26,7 @@ if ($table == 'user') {
 } elseif ($table == 'region') {
     $sql = "UPDATE region SET is_deleted = true WHERE r_id = $id";
 } elseif ($table == 'cons') {
-    $sql = "UPDATE constituencies SET is_deleted = true WHERE c_id = $id";
+    $sql = "UPDATE constituency SET is_deleted = true WHERE c_id = $id";
 } elseif ($table == 'ps') {
     $sql = "UPDATE polling_station SET is_deleted = true WHERE ps_id = $id";
 } elseif ($table == 'party') {

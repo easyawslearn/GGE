@@ -90,20 +90,56 @@ if ($_GET['call'] == 'region') {
         $u_id = $_POST['polling_agent'];
         $ps_name = $_POST['polling_station'];
 
-        $stmt = $con->prepare("INSERT INTO polling_station (ps_name,c_id,u_id) VALUES (?,?,?)");
-        $stmt->bind_param("sii", $ps_name, $c_id, $u_id);
+        // Create SQL query to check if polling station name already exists
+        $stmt = $con->prepare("SELECT ps_name FROM polling_station WHERE ps_name = ? AND c_id = ? AND is_deleted = false");
+        $stmt->bind_param("si", $ps_name, $c_id);
         $stmt->execute();
 
+        $result = $stmt->get_result();
+
+        if ($result->num_rows > 0) {
+            $resp = "duplicate";
+        } else {
+            // Proceed with inserting into the database
+            $stmt = $con->prepare("INSERT INTO polling_station (ps_name,c_id,u_id) VALUES (?,?,?)");
+            $stmt->bind_param("sii", $ps_name, $c_id, $u_id);
+            $stmt->execute();
+
+            if ($stmt->affected_rows === 0) {
+                $resp = "error";
+            } else {
+                $resp = "success";
+            }
+        }
+        $_SESSION['message'] = $resp;
         header('Location: ' . $_SERVER['HTTP_REFERER']);
     }
 } else if ($_GET['call'] == 'party') {
     if (isset($_POST['submit'])) {
         $p_name = $_POST['party'];
 
-        $stmt = $con->prepare("INSERT INTO party (p_name) VALUES (?)");
+        // Create SQL query to check if party name already exists
+        $stmt = $con->prepare("SELECT p_name FROM party WHERE p_name = ? AND is_deleted = false");
         $stmt->bind_param("s", $p_name);
         $stmt->execute();
 
+        $result = $stmt->get_result();
+
+        if ($result->num_rows > 0) {
+            $resp = "duplicate";
+        } else {
+            // Proceed with inserting into the database
+            $stmt = $con->prepare("INSERT INTO party (p_name) VALUES (?)");
+            $stmt->bind_param("s", $p_name);
+            $stmt->execute();
+
+            if ($stmt->affected_rows === 0) {
+                $resp = "error";
+            } else {
+                $resp = "success";
+            }
+        }
+        $_SESSION['message'] = $resp;
         header('Location: ' . $_SERVER['HTTP_REFERER']);
     }
 }

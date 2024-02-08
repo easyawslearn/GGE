@@ -165,7 +165,7 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
                   </button>
                 </div>
                 <div class="modal-body">
-                  <form action="" method="POST" class="region_form">
+                  <form action="edit.php?call=region" method="POST" class="region_form">
                     <div class="card-body">
                       <div class="form-group">
                         <label for="Eregion_name">Region</label>
@@ -175,15 +175,6 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
                     </div>
                     <button type="submit" name="edit_submit" class="btn btn-primary">Update</button>
                   </form>
-                  <?php
-                  if (isset($_POST['edit_submit'])) {
-                    $r_id = $_POST['Er_id'];
-                    $r_name = $_POST['Er_name'];
-
-                    $ins = mysqli_query($con, "UPDATE region SET r_name='$r_name' WHERE r_id = $r_id");
-                    $result = mysqli_query($con, $query);
-                  }
-                  ?>
                 </div>
               </div>
               <!-- /.modal-content -->
@@ -319,7 +310,6 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
     </script>
 
     <!-- Delete function -->
-
     <script>
       $(".delete-button").click(function() {
         var id = $(this).data("id");
@@ -339,7 +329,7 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
       });
     </script>
 
-    <!-- Edir function -->
+    <!-- Edit function -->
     <script>
       $(".edit-button").click(function() {
         var id = $(this).data("id");
@@ -392,7 +382,7 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
   </html>
 <?php
   if (isset($_SESSION['message']) && $_SESSION['message'] == 'duplicate') {
-    echo "<script>alert('Region already exists.')</script>";
+    echo "<script>alert('Region already exists with this name.')</script>";
     unset($_SESSION['message']);
   }
 } else {

@@ -163,7 +163,7 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
                   </button>
                 </div>
                 <div class="modal-body">
-                  <form action="" method="POST">
+                  <form action="edit.php?call=party" method="POST">
                     <div class="card-body">
 
                       <div class="form-group">
@@ -175,18 +175,6 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
                     </div>
                     <button type="submit" name="edit_submit" id="submit-edit" class="btn btn-primary">Update</button>
                   </form>
-                  <?php
-                  if (isset($_POST['edit_submit'])) {
-                    $p_id = $_POST['Ep_id'];
-                    $p_name = $_POST['Eparty'];
-
-                    $upd = "UPDATE party SET p_name = '$p_name' WHERE p_id = $p_id";
-
-                    $run = mysqli_query($con, $upd);
-
-                    echo "<meta http-equiv='refresh' content='0'>";
-                  }
-                  ?>
                 </div>
               </div>
               <!-- /.modal-content -->
@@ -361,6 +349,10 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
 
   </html>
 <?php
+  if (isset($_SESSION['message']) && $_SESSION['message'] == 'duplicate') {
+    echo "<script>alert('Party with this name already exists.')</script>";
+    unset($_SESSION['message']);
+  }
 } else {
   header('Location: index.php');
 }

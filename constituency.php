@@ -128,6 +128,7 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
           <div class="card-header">
             <h3 class="card-title p-2">Constituency</h3>
             <div class="card-tools">
+              <a href="region.php" class="btn btn-warning"><i class="fas fa-arrow-left"></i>&nbsp;&nbsp;Back</a>
               <button type="button" class="btn btn-success" data-toggle="modal" data-target="#modal-default">
                 <i class="fas fa-plus"></i>
                 &nbsp;&nbsp;Add
@@ -189,7 +190,7 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
                   </button>
                 </div>
                 <div class="modal-body">
-                  <form action="" method="POST" class="user_form">
+                  <form action="edit.php?call=constituency" method="POST" class="user_form">
                     <div class="card-body">
                       <div class="form-group">
                         <label for="regions">Region</label>
@@ -204,18 +205,7 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
                     </div>
                     <button type="submit" name="edit_submit" class="btn btn-primary">Update</button>
                   </form>
-                  <?php
-                  if (isset($_POST['edit_submit'])) {
-                    $c_id = $_POST['Ec_id'];
-                    $c_name = $_POST['Econstituency'];
 
-                    $ins = "UPDATE constituency SET c_name = '$c_name' WHERE c_id = $c_id";
-
-                    $run = mysqli_query($con, $ins);
-
-                    echo "<meta http-equiv='refresh' content='0'>";
-                  }
-                  ?>
                 </div>
               </div>
               <!-- /.modal-content -->
