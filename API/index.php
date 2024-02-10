@@ -11,7 +11,7 @@ $routes = [
     '/S3_project/API/pollingStationWiseParty' => '/pollingStationWiseParty.php',
     '/S3_project/API/regionWiseParty' => '/regionWiseParty.php',
     '/S3_project/API/pollingAgentWiseParty' => '/pollingAgentWiseParty.php',
-    '/S3_project/API/updateParty' => '/updateParty.php',
+    '/S3_project/API/updateCount' => '/updateCount.php',
 ];
 
 
@@ -26,5 +26,4 @@ if (array_key_exists($path, $routes)) {
     // If it doesn't, send a 404 response
     http_response_code(404);
     echo 'Page not found';
-    var_dump($path);
 }
