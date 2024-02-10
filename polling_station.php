@@ -164,7 +164,7 @@ if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
                       </div>
                       <div class="form-group">
                         <label for="polling_station">Polling Station</label>
-                        <input type="text" class="form-control" name='polling_station' id="polling_station" placeholder="Polling Station">
+                        <input type="text" class="form-control" name='polling_station' id="polling_station" placeholder="Polling Station" required>
                       </div>
                       <div class="form-group">
                         <label for="polling_agent">Polling Agent</label>
