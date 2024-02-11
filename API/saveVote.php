@@ -15,16 +15,16 @@ if ($jsonData) {
     $data = json_decode($jsonData);
     $psId = (int)$data->psId;
 
-    $sql = $con->prepare("UPDATE ps_party SET valid_vote_count = ?,rejected_vote_count = ?,no_show_count = ? WHERE psp_id = ? AND is_deleted = false");
+    $sql = $con->prepare("UPDATE ps_party SET valid_vote_count = ?,rejected_vote_count = ?,no_show_count = ? WHERE p_id = ? AND ps_id = ? AND is_deleted = false");
 
     foreach ($data->party as $party) {
 
         $validVote = (int)$party->validCount;
         $rejectedVote = (int)$party->rejectedCount;
         $noShowVote = (int)$party->noShowCount;
-        $pspId = (int)$party->pspId;
+        $pId = (int)$party->pId;
 
-        $sql->bind_param('iiii', $validVote, $rejectedVote, $noShowVote, $pspId);
+        $sql->bind_param('iiiii', $validVote, $rejectedVote, $noShowVote, $pId, $psId);
         $sql->execute();
     }
 
