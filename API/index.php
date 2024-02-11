@@ -4,15 +4,14 @@ define('BASE_DIR', __DIR__);
 
 // Define your routes
 $routes = [
-    '/S3_project/API/login' => '/loginApi.php',
-    '/S3_project/API/region' => '/region.php',
-    '/S3_project/API/constituency' => '/constituency.php',
-    '/S3_project/API/pollingStation' => '/pollingStation.php',
-    '/S3_project/API/pollingStationWiseParty' => '/pollingStationWiseParty.php',
-    '/S3_project/API/regionWiseParty' => '/regionWiseParty.php',
-    '/S3_project/API/pollingAgentWiseParty' => '/pollingAgentWiseParty.php',
-    '/S3_project/API/saveVote' => '/saveVote.php',
-    '/S3_project/API/test' => '/test.php',
+    '/GGE/API/login' => '/loginApi.php',
+    '/GGE/API/region' => '/region.php',
+    '/GGE/API/constituency' => '/constituency.php',
+    '/GGE/API/pollingStation' => '/pollingStation.php',
+    '/GGE/API/pollingStationWiseParty' => '/pollingStationWiseParty.php',
+    '/GGE/API/regionWiseParty' => '/regionWiseParty.php',
+    '/GGE/API/pollingAgentWiseParty' => '/pollingAgentWiseParty.php',
+    '/GGE/API/saveVote' => '/saveVote.php',
 ];
 
 
