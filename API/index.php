@@ -11,7 +11,8 @@ $routes = [
     '/S3_project/API/pollingStationWiseParty' => '/pollingStationWiseParty.php',
     '/S3_project/API/regionWiseParty' => '/regionWiseParty.php',
     '/S3_project/API/pollingAgentWiseParty' => '/pollingAgentWiseParty.php',
-    '/S3_project/API/updateCount' => '/updateCount.php',
+    '/S3_project/API/saveVote' => '/saveVote.php',
+    '/S3_project/API/test' => '/test.php',
 ];
 
 

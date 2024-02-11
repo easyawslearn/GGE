@@ -13,7 +13,7 @@ if ($con) {
         $username = $_POST['username'];
         $password = $_POST['password'];
 
-        $sql = $con->prepare("SELECT u_id,user_role FROM user WHERE username = ? AND password = ? AND is_deleted=false");
+        $sql = $con->prepare("SELECT u_id,user_role FROM user WHERE username = BINARY ? AND password = BINARY ? AND is_deleted=false");
 
         $sql->bind_param('ss', $username, $password);
         $sql->execute();

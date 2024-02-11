@@ -28,7 +28,7 @@ if ($con) {
                 $party['pName'] = $row['p_name'];
                 $party['validCount'] = $row['valid_vote_count'];
                 $party['rejectCount'] = $row['rejected_vote_count'];
-                $party['unshowCount'] = $row['no_show_count'];
+                $party['unShowCount'] = $row['no_show_count'];
                 array_push($response['party'], $party);
             }
         } else {

@@ -24,7 +24,7 @@ if (empty($username)) {
     exit();
 }
 
-$sql = $con->prepare("SELECT * FROM admin_panel WHERE username=? AND password=?");
+$sql = $con->prepare("SELECT * FROM admin_panel WHERE username= BINARY ? AND password= BINARY ?");
 $sql->bind_param("ss", $username, $password);
 
 $sql->execute();

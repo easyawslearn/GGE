@@ -11,7 +11,7 @@ $response = array();
 if ($con) {
     if (isset($_GET['userId'])) {
         $userId = $_GET['userId'];
-        $sql = $con->prepare("SELECT ps_id,ps_name,c_id FROM polling_station WHERE u_id = ? AND is_deleted = false");
+        $sql = $con->prepare("SELECT ps_id,ps_name,c_id,is_submitted FROM polling_station WHERE u_id = ? AND is_deleted = false");
         $sql->bind_param('i', $userId);
         $sql->execute();
         $result = $sql->get_result();
@@ -23,6 +23,7 @@ if ($con) {
             $response['message'] = 'Successfully fetched data.';
             $response['psId'] = $row['ps_id'];
             $response['psName'] = $row['ps_name'];
+            $response['isSubmitted'] = (bool)$row['is_submitted'];
             $response['cId'] = $row['c_id'];
 
             $sql = $con->prepare("SELECT r_id,c_name FROM constituency WHERE c_id = ? AND is_deleted = false");
@@ -56,7 +57,7 @@ if ($con) {
                 $party['pName'] = $row['p_name'];
                 $party['validCount'] = $row['valid_vote_count'];
                 $party['rejectCount'] = $row['rejected_vote_count'];
-                $party['unshowCount'] = $row['no_show_count'];
+                $party['unShowCount'] = $row['no_show_count'];
                 array_push($response['party'], $party); // Add each party to the 'party' array
             }
         } else {

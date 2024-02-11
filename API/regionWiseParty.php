@@ -38,7 +38,7 @@ if (isset($_GET['rId'])) {
                             $party['pName'] = $row3['p_name'];
                             $party['validCount'] = $row3['valid_vote_count'];
                             $party['rejectCount'] = $row3['rejected_vote_count'];
-                            $party['unshowCount'] = $row3['no_show_count'];
+                            $party['unShowCount'] = $row3['no_show_count'];
                             array_push($response['party'], $party);
 
                             $response['selectedRegionVote'] = $response['selectedRegionVote'] + $row3['valid_vote_count'] + $row3['rejected_vote_count'] + $row3['no_show_count'];
