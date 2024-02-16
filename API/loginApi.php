@@ -27,7 +27,7 @@ if ($con) {
             $response['userRole'] = $row['user_role'];
         } else {
             $response['success'] = false;
-            $response['message'] = 'Login unsuccessful';
+            $response['message'] = 'Invalid username or password';
         }
     } else {
         $response['message'] = 'No username or password provided';
