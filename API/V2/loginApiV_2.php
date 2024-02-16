@@ -24,8 +24,8 @@ if ($con) {
             $response['success'] = true;
             $response['message'] = 'Login successful';
             $response['data'] = new stdClass;
-            $response['data']->userId = 3;
-            $response['data']->userRole = "polling_agent";
+            $response['data']->userId = $row['u_id'];
+            $response['data']->userRole = $row['user_role'];
 
         } else {
             $response['success'] = false;
