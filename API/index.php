@@ -5,7 +5,7 @@ define('BASE_DIR', __DIR__);
 // Define your routes
 $routes = [
     '/GGE/API/login' => '/loginApi.php',
-    '/GGE/API/V2/login' => '/loginApiV_2.php',
+    '/GGE/API/V2/login' => '/V2/loginApiV_2.php',
     '/GGE/API/region' => '/region.php',
     '/GGE/API/constituency' => '/constituency.php',
     '/GGE/API/pollingStation' => '/pollingStation.php',
