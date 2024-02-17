@@ -33,23 +33,30 @@ if (isset($_GET['rId'])) {
                     $res3 = $sql3->get_result();
                     if ($res3->num_rows > 0) {
                         while ($row3 = $res3->fetch_assoc()) {
-                            $party = array();
-                            $party['pspId'] = $row3['psp_id'];
-                            $party['pId'] = $row3['p_id'];
-                            $party['pName'] = $row3['p_name'];
-                            $party['validCount'] = $row3['valid_vote_count'];
-                            $party['rejectCount'] = $row3['rejected_vote_count'];
-                            $party['unShowCount'] = $row3['no_show_count'];
-                            array_push($response['data']->party, $party);
+                            $partyId = $row3['p_id'];
+                            if (!isset($response['data']->party[$partyId])) {
+                                $response['data']->party[$partyId] = array(
+                                    'pspId' => $row3['psp_id'],
+                                    'pId' => $partyId,
+                                    'pName' => $row3['p_name'],
+                                    'validCount' => 0,
+                                    'rejectCount' => 0,
+                                    'unShowCount' => 0
+                                );
+                            }
+                            $response['data']->party[$partyId]['validCount'] += $row3['valid_vote_count'];
+                            $response['data']->party[$partyId]['rejectCount'] += $row3['rejected_vote_count'];
+                            $response['data']->party[$partyId]['unShowCount'] += $row3['no_show_count'];
 
-                            $response['data']->selectedRegionVote = $response['data']->selectedRegionVote + $row3['valid_vote_count'] + $row3['rejected_vote_count'] + $row3['no_show_count'];
+                            $response['data']->selectedRegionVote += $row3['valid_vote_count'] + $row3['rejected_vote_count'] + $row3['no_show_count'];
                         }
-                        $response['success'] = true;
-                        $response['message'] = 'Data fetched successfully.';
                     }
                 }
             }
         }
+        $response['data']->party = array_values($response['data']->party);
+        $response['success'] = true;
+        $response['message'] = 'Data fetched successfully.';
     } else {
         $response['success'] = false;
         $response['message'] = 'Failed fetch to selected region data.';
